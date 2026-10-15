@@ -499,6 +499,20 @@ export const friendsData: FriendItem[] = [
 		rss: "https://clannad.top/feed.xml",
 		tags: ["技术"],
 	},
+	{
+		title: "Brandon's Blog",
+		imgurl: "https://cdn.oopss.top/icon.jpg",
+		desc: "Brandon的个人博客",
+		siteurl: "https://blog.oopss.top",
+		tags: ["技术", "生活"],
+	},
+	{
+		title: "知海图书馆",
+		imgurl: "https://www.zhihailib.com/favicon.ico",
+		desc: "17万+精选中文电子书馆藏与免下载在线阅读平台",
+		siteurl: "https://www.zhihailib.com",
+		tags: ["技术", "工具", "电子书库"],
+	},
 ];
 
 /** 供友链检测与朋友圈服务共用的数据，保持展示列表的原始顺序。 */
