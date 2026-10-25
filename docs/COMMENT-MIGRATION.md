@@ -113,7 +113,7 @@ Artalk 使用 Python `sqlite3.Connection.backup()` 制作一致性快照，不�
 - Artalk 2.10.0 原生列表请求失败会在报告错误后重复抛出拒绝。`src/plugins/artalk-network-errors.mjs` 对固定 ESM 产物做精确的构建期修正，保留原生失败事件和重试逻辑；不修改 node_modules。升级时若匹配失效会阻止构建，必须重新检查上游。
 - Artalk 配置须显式填写 `login_timeout: 259200`。部分配置文件不会自动补齐默认值；遗漏此字段会导致管理员令牌立即过期。正式配置只信任两个生产域名，预览域名仅在候选配置中。
 - 评论 CSS 通过组件页面导入，由 ClientRouter 管理，不能仅靠缓存的动态 import 注入，否则换页后可能丢失样式；首页不加载评论编辑器资源。
-- 原生 Astro 静态 redirect 会丢失 hash；旧页面使用轻量跳转页保留查询参数和锚点，不恢复已删除正文。`public/edgeone.json` 会复制到发布分支根，提供 8 条包含有/无尾斜杠的 HTTP 301 规则（按 [EdgeOne 官方格式](https://pages.edgeone.ai/document/edgeone-json)）；正式发布后必须验证 CDN 的参数与 hash 继承。Astro preview 的 `always` 模式会直接拒绝无尾斜杠路径，不应为此改动全站路由策略。
+- 原生 Astro 静态 redirect 会丢失 hash，EdgeOne 直接 HTTP 301 实测还会丢失查询参数。旧页面使用轻量跳转页保留查询参数和锚点，不恢复已删除正文。`public/edgeone.json` 复制到发布分支根，将 8 个有/无尾斜杠入口内部重写到各自的兼容页 `index.html`，再由已有页面完成跳转（按 [EdgeOne 官方格式](https://pages.edgeone.ai/document/edgeone-json)）；不增加边缘函数。Astro preview 的 `always` 模式会直接拒绝无尾斜杠路径，故本地只测 4 个斜杠入口，生产必须逐一实测全部 8 个入口的查询参数及旧锚点。
 - 早期候选基线为 TypeScript 7，需要隔离 TypeScript 6 检查。当前实施分支已基于主线依赖修复提交 `0804897`（TypeScript 6.0.3），标准 `pnpm check` 通过：113 个文件、0 错误、0 警告、9 条提示；迁移和头像规则 6 项、固定版本网络修正 2 项测试通过。
 - Windows Node 24 的字体钩子曾间歇性发生 FFI 退出崩溃（3221225477），以及隔离安装缺少 DLL。补齐本机同版本 DLL 后，使用与 CI 相同的临时 Node 22.23.4 完成标准 `pnpm build`，包含字体生成、Astro/Pagefind、静态审计、资源预算和 105 页后处理，退出码为 0。未修改字体工具链或项目依赖以规避该问题。
 - 最终浏览器回归无未处理异常，旧路径跳转保留参数与锚点，失败请求重试恢复；8 条网关规则只完成配置校验，尚未发布到生产 CDN。首页样式总量 108312 字节，低于 130 KiB 预算。

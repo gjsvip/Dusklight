@@ -1,12 +1,12 @@
 {
-  "redirects": [
-    { "source": "/comments", "destination": "/envelope/", "statusCode": 301 },
-    { "source": "/comments/", "destination": "/envelope/", "statusCode": 301 },
-    { "source": "/equipment", "destination": "/devices/", "statusCode": 301 },
-    { "source": "/equipment/", "destination": "/devices/", "statusCode": 301 },
-    { "source": "/log", "destination": "/timeline/", "statusCode": 301 },
-    { "source": "/log/", "destination": "/timeline/", "statusCode": 301 },
-    { "source": "/posts/p562369c9", "destination": "/envelope/", "statusCode": 301 },
-    { "source": "/posts/p562369c9/", "destination": "/envelope/", "statusCode": 301 }
+  "rewrites": [
+    { "source": "/comments", "destination": "/comments/index.html" },
+    { "source": "/comments/", "destination": "/comments/index.html" },
+    { "source": "/equipment", "destination": "/equipment/index.html" },
+    { "source": "/equipment/", "destination": "/equipment/index.html" },
+    { "source": "/log", "destination": "/log/index.html" },
+    { "source": "/log/", "destination": "/log/index.html" },
+    { "source": "/posts/p562369c9", "destination": "/posts/p562369c9/index.html" },
+    { "source": "/posts/p562369c9/", "destination": "/posts/p562369c9/index.html" }
   ]
 }

@@ -51,23 +51,27 @@ with sync_playwright() as p:
     assert not any("Artalk" in url or "artalk.css" in url for url in requests if "/_astro/" in url)
     report["homepage_recent_comments"] = 5
 
-    for old_path in ["/comments/", "/posts/p562369c9/"]:
-        goto(old_path + "?migration-test=1#" + legacy_id)
-        page.wait_for_url(f"**/envelope/?migration-test=1#atk-comment-{new_id}", timeout=25000)
-        ready()
-    for old_path, target in [("/equipment/", "/devices/"), ("/log/", "/timeline/")]:
-        goto(old_path + "?migration-test=1#comments")
-        page.wait_for_url("**" + target + "?migration-test=1#comments", timeout=20000)
-    report["legacy_redirects_preserve_query_and_hash"] = "ok"
-    # Astro preview 的 always 模式会在自定义 404 之前拒绝无尾斜杠路径。
-    # 这些入口由随静态产物发布的 EdgeOne HTTP 301 配置处理，正式发布后再实测 CDN。
-    edge_rules = json.loads(pathlib.Path("public/edgeone.json").read_text())["redirects"]
     aliases = json.loads(pathlib.Path("src/config/comment-paths.json").read_text())
+    remote = urllib.parse.urlparse(args.base_url).hostname not in ("localhost", "127.0.0.1")
+    redirect_count = 0
+    for original, target in aliases.items():
+        for old_path in ([original, original.rstrip("/")] if remote else [original]):
+            old_hash = legacy_id if target == "/envelope/" else "comments"
+            final_hash = f"atk-comment-{new_id}" if target == "/envelope/" else "comments"
+            goto(old_path + "?migration-test=1#" + old_hash)
+            page.wait_for_url("**" + target + "?migration-test=1#" + final_hash, timeout=25000)
+            ready()
+            redirect_count += 1
+    report["legacy_redirects_preserve_query_and_hash"] = "ok"
+    report["legacy_redirects_tested"] = redirect_count
+    # Astro preview 的 always 模式会在自定义 404 之前拒绝无尾斜杠路径。
+    # EdgeOne 内部重写交给兼容页处理，避免平台 HTTP 301 丢失查询参数。
+    edge_rules = json.loads(pathlib.Path("public/edgeone.json").read_text())["rewrites"]
     assert len(edge_rules) == len(aliases) * 2
     for rule in edge_rules:
-        assert rule["destination"] == aliases[rule["source"].rstrip("/") + "/"]
-        assert rule["statusCode"] == 301
-    report["gateway_rules_prepared_not_published"] = len(edge_rules)
+        assert rule["source"].rstrip("/") + "/" in aliases
+        assert rule["destination"] == rule["source"].rstrip("/") + "/index.html"
+    report["gateway_rewrites"] = len(edge_rules)
 
     goto("/envelope/#" + legacy_id)
     ready()
