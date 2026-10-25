@@ -12,7 +12,9 @@
 - 本机候选预览 `http://127.0.0.1:4324/envelope/#comments`，仅在候选后端增加此预览来源；正式配置不包含预览来源。
 - 原生 GitHub 配置工具为 `scripts/comments/configure-auth.py`。用户需在服务器 `/opt/artalk/oauth.private.json`（0600）填写 `client_id`、`client_secret`；工具遇到空值会在修改配置前失败。回调为 `https://artalk.mcxiaochen.top/api/v2/auth/github/callback`，仅启用 GitHub 和匿名评论，沿用随固定镜像提供的官方登录插件。
 - 为避免无条件信任访客 IP 头，已生成 `/opt/artalk/origin-auth.private.json`（0600）。EdgeOne 需覆盖回源请求头 `X-Dusklight-Origin-Key` 为文件中的随机值，并让 `/api/v2/*` 绕过缓存。配置验证后才在 Artalk 站点反代启用回源鉴权及真实访客 IP；不修改其他站点的 real-IP 配置。
-- 当前 GitHub 凭据尚未填写，原生登录尚未启用，真实 GitHub 授权和 Artalk 通知实际收件未验收。候选公网评论写入继续关闭；后台 `/sidebar/` 已存在，但其登录 POST 仍受候选限制，不能把此状态称为后台已可登录。
+- GitHub 凭据已填写且权限为 0600。通过独立 QA 库与临时网关完成真实 GitHub 授权、该身份发表评论/回复；用户确认原生通知已实际收到且链接定位正常。QA 中有 1 个已确认 GitHub 身份、3 条独立测试评论及 3 条已邮件通知记录；这些测试数据不作为正式迁移源。
+- EdgeOne 已发布回源头与缓存规则，实测经 EdgeOne 验证端点为 204、直连源站缺少/伪造密钥为 403；经 EdgeOne 提交伪造访客 IP 未被后端采纳。缓存条件使用 `lower(${http.request.uri.path}) matches '^/api/v2(/|$)'`；`in ['/api/*']` 属于精确集合匹配，不能替代路径前缀匹配。
+- Artalk 2.10.0 官方登录插件在取消 GitHub 授权窗口时额外报告 `Login canceled`，页面仍可重新登录和操作。此已知取消日志噪声如实保留，不全局吞掉错误、不维护另一套 OAuth 实现；真实授权、回复和通知均通过。
 
 - 后端固定 `artalk/artalk-go:2.10.0`，实际部署按 digest 固定为 `sha256:ed51450f3ed744780efd0d796f1ea033063bb11543973439b9c57ed32ac9b78f`，前端 npm 固定 `artalk@2.10.0`。
 - 独立 Compose：`/opt/artalk/compose.yml`；候选 SQLite 与配置：`/opt/artalk/data/`；只监听 `127.0.0.1:23366`。
@@ -71,6 +73,8 @@ python3 scripts/comments/migrate.py convert <私有备份目录> <新转换目�
 python3 scripts/comments/migrate.py verify <转换目录> <SQLite路径> <新定位表路径>
 python3 scripts/comments/migrate.py avatars <转换目录> <新定位表路径> <新头像映射路径>
 python3 scripts/comments/test_migrate.py
+# 在服务器全新目录、内网和相同镜像中恢复；不会覆盖生产挂载
+python3 scripts/comments/restore-rehearsal.py <服务器备份目录>
 ```
 
 Artalk 使用 Python `sqlite3.Connection.backup()` 制作一致性快照，不复制运行中的 SQLite 单文件。私有备份、最终迁移源、配置、原镜像和 ID 映射至少保留 30 天，不自动删除。

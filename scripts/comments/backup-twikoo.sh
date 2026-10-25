@@ -46,7 +46,8 @@ summary = {'phase':p.name, 'comments':len(rows), 'pages':dict(collections.Counte
  'orphan_rid':sum(bool(c.get('rid')) and str(c['rid']) not in ids for c in rows),
  'orphan_pid':sum(bool(c.get('pid')) and str(c['pid']) not in ids for c in rows)}
 (p/'summary.json').write_text(json.dumps(summary,ensure_ascii=False,indent=2)+'\n')
-(p/'RESTORE.txt').write_text('先验证 SHA256SUMS，再用 images.tar.gz 恢复相同镜像。\n在隔离网络和全新数据目录启动 MongoDB，mongorestore --archive --gzip 恢复 mongo.archive.gz。\n核对评论、配置、计数、回复及 Twikoo 读取后才可切换。配置和凭据均在 private 文件中，禁止公开。\n此基线逻辑备份在服务运行期间生成；最终切换前必须停写再备份，并制作全部 MongoDB 挂载的冷备。\n')
+state = '本批为停写后的最终逻辑备份；须同时检查 mongo-cold.tar.gz 及其挂载清单。' if p.name.endswith('-final') else '本批为运行期间的基线逻辑备份，不能代替停写后的最终逻辑备份和冷备。'
+(p/'RESTORE.txt').write_text('先验证 SHA256SUMS，再用 images.tar.gz 恢复相同镜像。\n在隔离网络和全新数据目录启动 MongoDB，mongorestore --archive --gzip 恢复 mongo.archive.gz。\n核对评论、配置、计数、回复及 Twikoo 读取后才可切换。配置和凭据均在 private 文件中，禁止公开。\n'+state+'\n')
 PY
 (cd "$backup" && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS && sha256sum -c SHA256SUMS > /dev/null)
 printf 'BACKUP=%s\n' "$backup"
