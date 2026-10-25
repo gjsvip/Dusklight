@@ -1,4 +1,4 @@
-"""从服务器私有文件启用 Artalk 原生 GitHub 登录；不创建 OAuth App、不输出凭据。"""
+"""从服务器私有文件启用邮箱与 GitHub 登录，禁止匿名评论；不输出凭据。"""
 import argparse
 import json
 import os
@@ -17,9 +17,9 @@ if not all(isinstance(credentials.get(key), str) and credentials[key].strip() fo
 settings = json.loads(args.config.read_text())
 settings["auth"] = {
     "enabled": True,
-    "anonymous": True,
+    "anonymous": False,
     "callback": "https://artalk.mcxiaochen.top",
-    "email": {"enabled": False},
+    "email": {**settings.get("auth", {}).get("email", {}), "enabled": True},
     "github": {"enabled": True, "client_id": credentials["client_id"], "client_secret": credentials["client_secret"]},
 }
 temporary = args.config.with_suffix(".oauth-tmp")
@@ -27,4 +27,4 @@ with temporary.open("x") as f:
     json.dump(settings, f, ensure_ascii=False, indent=2)
 os.chmod(temporary, 0o600)
 temporary.replace(args.config)
-print("GitHub 原生登录及匿名评论配置完成；需重载对应 Artalk 服务。")
+print("邮箱与 GitHub 登录配置完成，匿名评论已禁用；需重载对应 Artalk 服务。")

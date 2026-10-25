@@ -36,8 +36,10 @@ data = pathlib.Path(next(item["Source"] for item in mounts if item["Destination"
 assert root in data.resolve().parents
 settings = json.loads((data / "artalk.yml").read_text())
 report["github_enabled"] = bool(settings.get("auth", {}).get("github", {}).get("enabled"))
+report["email_login_enabled"] = bool(settings.get("auth", {}).get("email", {}).get("enabled"))
+report["anonymous_enabled"] = bool(settings.get("auth", {}).get("anonymous"))
 report["notifications_enabled"] = bool(settings.get("email", {}).get("enabled"))
-if state["phase"] != "live" or not report["github_enabled"] or not report["notifications_enabled"]:
+if state["phase"] != "live" or not report["github_enabled"] or not report["notifications_enabled"] or not report["email_login_enabled"] or report["anonymous_enabled"]:
     report["issues"].append("正式配置或开放状态不符")
 with sqlite3.connect(f"file:{data}/artalk.db?mode=ro", uri=True) as db:
     report["integrity"] = db.execute("PRAGMA integrity_check").fetchone()[0]
@@ -59,12 +61,17 @@ for path in ("/api/v2/version", "/api/v2/conf/auth/providers", "/json/owo.json")
 # 仅统计日志中的状态码，不把邮箱、IP、正文或 Token 写入复查结果。
 result = subprocess.run(["docker", "exec", "1Panel-openresty-zGzc", "tail", "-n", "20000", "/var/log/nginx/artalk-access.log"], capture_output=True, text=True)
 counts = collections.Counter()
+login_counts = collections.defaultdict(collections.Counter)
 opened = datetime.datetime.fromisoformat(state["opened_at"])
 for line in result.stdout.splitlines():
+    login = re.search(r'\[([^\]]+)\] "POST /api/v2/auth/email/(send|register|login)(?:\?[^ ]*)? HTTP/[^\"]+" (\d{3})', line)
+    if login and datetime.datetime.strptime(login[1], "%d/%b/%Y:%H:%M:%S %z") >= opened:
+        login_counts[login[2]][login[3]] += 1
     match = re.search(r'\[([^\]]+)\] "POST /api/v2/comments(?:\?[^ ]*)? HTTP/[^\"]+" (\d{3})', line)
     if match and datetime.datetime.strptime(match[1], "%d/%b/%Y:%H:%M:%S %z") >= opened:
         counts[match[2]] += 1
 report["submission_status_sample"] = dict(counts)
+report["email_auth_status_sample"] = {path: dict(statuses) for path, statuses in login_counts.items()}
 total = sum(counts.values())
 report["submission_success_rate_sample"] = round(sum(n for status, n in counts.items() if status.startswith("2")) / total, 4) if total else None
 report["log_sample_limit"] = 20000
