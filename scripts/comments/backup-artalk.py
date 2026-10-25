@@ -47,12 +47,21 @@ for source_name, target in [
     (release / "historical-avatars.json", "historical-avatars.json"),
     (root / "cutover-state.private.json", "cutover-state.private.json"),
     (root / "rehearsal/github-notification-verification.json", "github-notification-verification.json"),
+    (release / "post-cutover-verification.json", "post-cutover-verification.json"),
     (pathlib.Path("/opt/1panel/www/sites/artalk.mcxiaochen.top/index/json/owo.json"), "owo.json"),
     (pathlib.Path("/opt/1panel/www/conf.d/artalk.mcxiaochen.top.conf"), "artalk-openresty.private.conf"),
     (pathlib.Path("/opt/1panel/www/conf.d/twikoo.mcxiaochen.top.conf"), "twikoo-openresty.private.conf"),
 ]:
     if source_name.exists():
         shutil.copy2(source_name, backup / target)
+for label in ("24h", "7d"):
+    for extension in ("service", "timer"):
+        unit = pathlib.Path(f"/etc/systemd/system/dusklight-artalk-observe-20261025-{label}.{extension}")
+        if unit.exists():
+            shutil.copy2(unit, backup / unit.name)
+observations = sorted((root / "observations").glob("*-immediate.json"))
+if observations:
+    shutil.copy2(observations[-1], backup / "immediate-observation.json")
 with (backup / "SHA256SUMS").open("x") as manifest:
     for file in sorted(backup.iterdir()):
         if file.name != "SHA256SUMS":

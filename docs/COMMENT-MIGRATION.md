@@ -2,9 +2,9 @@
 
 ## 状态与边界
 
-2026-10-25 实施备份、恢复演练及迁移。**截至本次发布准备：Twikoo 已停写，最终库已切换至正式 Artalk 挂载；公网仍只读，前端发布和写入放行等待流水线与 CDN 验收。** 新入口通过 EdgeOne CNAME 接入；源站地址、管理员凭据和邮件配置仅保存在私有运维目录，不写入此公开仓库。
+2026-10-25 完成备份、恢复演练及正式迁移。**Artalk 于北京时间 23:15:45 开放评论写入与正式通知；生产前端已发布并通过真实 CDN 验收，Twikoo 保持停止，MongoDB 保持运行。** 新入口通过 EdgeOne CNAME 接入；源站地址、管理员凭据和邮件配置仅保存在私有运维目录，不写入此公开仓库。
 
-后续头像、样式、GitHub 登录及正式上线计划已获 commit、push 和切换授权。实施分支 `codex/artalk-comment-migration` 基于最新 `origin/main`，原工作区及 `friends.ts` 的既有修改不纳入提交。OAuth 凭据、真实登录、通知收件、回源身份及最终备份验收未完成前，不停写 Twikoo。
+头像、样式、GitHub 登录及正式上线计划已获 commit、push 和切换授权。实施分支 `codex/artalk-comment-migration` 基于主线依赖修复，已快进发布至 `main`；原工作区及 `friends.ts` 的既有修改未纳入提交。执行时先通过 OAuth、真实登录与收件、回源身份及备份恢复验收，再停写旧服务；未双写。
 
 ## 头像、样式及登录适配进度
 
@@ -18,8 +18,8 @@
 
 - 后端固定 `artalk/artalk-go:2.10.0`，实际部署按 digest 固定为 `sha256:ed51450f3ed744780efd0d796f1ea033063bb11543973439b9c57ed32ac9b78f`，前端 npm 固定 `artalk@2.10.0`。
 - 独立 Compose：`/opt/artalk/compose.yml`；正式挂载为 `/opt/artalk/releases/20261025-222818-final/data/`，旧候选 `/opt/artalk/data/` 保留；只监听 `127.0.0.1:23366`。
-- 当前只读入口仅允许 GET/HEAD/OPTIONS，写入返回 403，通知暂时关闭。生产邮件配置和随机生成的管理员凭据分别存于 `/opt/artalk/production.private.yml`、`/opt/artalk/admin.private.json`，只允许 root 读取。后台原生登录将在写入放行后可用，入口 `/sidebar/`；后台表情使用 Artalk 同源 `/json/owo.json`，博客继续使用本站同源文件。
-- 隔离恢复容器为 `dusklight-mongo-restore`、`dusklight-twikoo-restore`；独立功能测试容器为 `dusklight-artalk-qa`，其测试数据不得作为正式迁移源。验收后仅停止这三个测试容器，保留其数据与日志；候选服务继续运行。
+- 正式入口已开放原生 API，SMTP 与通知已启用，所有回源仍必须通过私有密钥鉴权。生产邮件配置和随机管理员凭据分别存于 `/opt/artalk/production.private.yml`、`/opt/artalk/admin.private.json`（root 私有）。后台 `/sidebar/#/login` 已实际登录验证；若提示选择昵称，选择凭据文件 `name` 对应管理员，不合并历史账户。后台表情使用 Artalk 同源 `/json/owo.json`，博客继续使用本站同源文件。
+- 初期恢复容器 `dusklight-mongo-restore`、`dusklight-twikoo-restore`、功能测试容器 `dusklight-artalk-qa`，以及后续 GitHub QA 和各批次恢复演练容器均已停止，数据与日志保留；临时 QA 网关已移除。正式服务复用 `dusklight-artalk` 名称及固定镜像，保留旧候选数据目录。
 
 ## 历史页面归并决定
 
@@ -89,9 +89,13 @@ Artalk 使用 Python `sqlite3.Connection.backup()` 制作一致性快照，不�
 
 正式库首个一致性快照为 `20261025-225518-artalk-production`，归档 SHA-256：`4b4e90d62a9716e378ec7d7478781e1a1edd1add38012f017fe554777a1e6024`。备份工具从容器实际 `/data` 挂载定位数据库，不再固定指向旧候选目录；同批包含正式映射、运行配置、回源鉴权及 OAuth 配置。切换状态及后续写入开放时间保存在服务器 `/opt/artalk/cutover-state.private.json`。
 
+上线最终交付快照为 `20261025-232828-artalk-production`，归档 SHA-256：`8ca1586994bc26bd2ac74296b532a1dcbcc82a1519df54bd691dd4a967d5df63`，包括已启用通知的运行配置、正式 SQLite、映射、回源配置、即时核验和定时复查单元。本机副本位于同一备份根下的 `20261025-232828-artalk-production-verified`；所有最终数据与旧服务备份至少保留 30 天，不自动删除。
+
+功能发布提交 `85ca201` 的 GitHub Actions [40205563615](https://github.com/mcxiaochenn/Dusklight/actions/runs/40205563615) 构建与部署成功。真实 CDN 的八个旧入口、查询参数、旧评论锚点、七条桌面路由、三条移动路由、主题切换和断网重试全部通过，无横向溢出、滚动长任务或未处理异常。旧 Twikoo 入口返回维护状态 503，旧 Twikoo/Mongo 容器 ID 保留，16 个无关容器 ID 与启动时间未变。
+
 ## 正式切换与回退门槛
 
-**已获生产发布和正式切换授权。备份、恢复、最终导入及后端只读切换已通过；剩余发布/放行必须继续遵循以下门槛。**
+**以下门槛已全部执行并通过；保留操作顺序供审计及恢复使用。**
 
 1. 确认 EdgeOne HTTPS 与回源正常；API `/api/v2/` 不得缓存。当前候选反代以连接 IP 为准；正式放行前，通过上述回源密钥验证身份后再信任 `EO-Connecting-IP`，验证直接请求源站及伪造头部均不能绕过，避免把所有访客计为边缘节点。只改 Artalk 站点，不修改其他站点的全局 real-IP 设置。
 2. 保存当前生产前端版本与静态产物。令 Twikoo 原入口进入维护，停止 `twikoo`；禁止旧缓存客户端继续写入。
@@ -101,7 +105,7 @@ Artalk 使用 Python `sqlite3.Connection.backup()` 制作一致性快照，不�
 6. 先验证最终库，再使用 `production.private.yml` 启用已验证 SMTP；发布前端产物并确认 CDN 生效后，移除候选反代中的 `limit_except` 开放写入。Twikoo 保持停止，不双写。
 7. 上线即刻、24 小时及第 7 天检查提交/回复、审核、邮件、计数、路径与错误日志；比对其他容器的 ID 和启动时间，禁止顺带重建或升级其他服务。
 
-若 Artalk 尚无新增写入，恢复旧前端/反代并启动 Twikoo。若已有新增或编辑，先停 Artalk 写入并制作一致性备份，导出差异、迁回并核对新评论/回复/状态后再恢复 Twikoo；**禁止只回退前端而遗漏新数据**。本次未执行任何回退或删除。
+若 Artalk 尚无新增写入，恢复旧前端/反代并启动 Twikoo。若已有新增或编辑，先停 Artalk 写入并制作一致性备份，导出差异、迁回并核对新评论/回复/状态后再恢复 Twikoo；**禁止只回退前端而遗漏新数据**。回退时同时停用本批观察 timer，避免将主动回退误报为异常。本次未回退，未删除 Twikoo 容器、镜像或数据库。
 
 验证限制应如实记录：SMTP 接受不等于确认收到邮件；一次 API 200 不等于验证码或通知闭环；本次试迁移映射不等于正式最终映射。
 
@@ -116,6 +120,12 @@ Artalk 使用 Python `sqlite3.Connection.backup()` 制作一致性快照，不�
 - 原生 Astro 静态 redirect 会丢失 hash，EdgeOne 直接 HTTP 301 实测还会丢失查询参数。旧页面使用轻量跳转页保留查询参数和锚点，不恢复已删除正文。`public/edgeone.json` 复制到发布分支根，将 8 个有/无尾斜杠入口内部重写到各自的兼容页 `index.html`，再由已有页面完成跳转（按 [EdgeOne 官方格式](https://pages.edgeone.ai/document/edgeone-json)）；不增加边缘函数。Astro preview 的 `always` 模式会直接拒绝无尾斜杠路径，故本地只测 4 个斜杠入口，生产必须逐一实测全部 8 个入口的查询参数及旧锚点。
 - 早期候选基线为 TypeScript 7，需要隔离 TypeScript 6 检查。当前实施分支已基于主线依赖修复提交 `0804897`（TypeScript 6.0.3），标准 `pnpm check` 通过：113 个文件、0 错误、0 警告、9 条提示；迁移和头像规则 6 项、固定版本网络修正 2 项测试通过。
 - Windows Node 24 的字体钩子曾间歇性发生 FFI 退出崩溃（3221225477），以及隔离安装缺少 DLL。补齐本机同版本 DLL 后，使用与 CI 相同的临时 Node 22.23.4 完成标准 `pnpm build`，包含字体生成、Astro/Pagefind、静态审计、资源预算和 105 页后处理，退出码为 0。未修改字体工具链或项目依赖以规避该问题。
-- 最终浏览器回归无未处理异常，旧路径跳转保留参数与锚点，失败请求重试恢复；8 条网关规则只完成配置校验，尚未发布到生产 CDN。首页样式总量 108312 字节，低于 130 KiB 预算。
+- 最终浏览器回归无未处理异常，八个旧路径在真实 CDN 保留参数与锚点，失败请求重试恢复；静态审计、字体及首屏资源预算通过。
 - 新适配回归覆盖 419 条头像映射、页面 28 张 QQ 头像实际加载、5 张图片内容哈希互不相同、主评论/侧栏一致性，以及 QQ 请求失败后仅回退一次。1440/390 宽度明暗主题无横向溢出，预览、表情、回复及取消通过。另跑完整路由/滚动/断网回归，未处理异常为 0、滚动长任务为 0。原始截图与报告仅保存在私有验收副本，不发布到博客仓库。
 - 启用官方 GitHub 插件后重新通过匿名/管理员 API、验证码/限流、审核/置顶、多层回复，以及桌面和移动端连续路由、弹窗 GitHub/跳过登录入口、快速换页、主题和断网重试回归；除上述主动取消授权的原生提示外，无未处理异常。测试时关闭合成地址通知，真实收件用独立受控流程验证。
+
+## 上线观察
+
+即时只读检查通过：552 条历史评论（公开 533 条、待审 19 条）、无孤立回复、SQLite 完整性正常、GitHub 和通知配置启用、后端错误日志采样为 0。即时检查时尚无正式发表样本，提交成功率记录为 `null`，不虚称 100%。
+
+已设置一次性 systemd 只读任务（Asia/Shanghai）：`dusklight-artalk-observe-20261025-24h.timer` 于 **2026-10-26 23:15:45**，`dusklight-artalk-observe-20261025-7d.timer` 于 **2026-11-01 23:15:45**。任务调用 `scripts/comments/observe.py`，只读核对服务状态、数据库、API、提交状态码与错误日志采样，结果写入 root 私有 `/opt/artalk/observations/`；不发表/编辑评论、不发额外邮件、不自动重启或回退，也不自动删除数据。
