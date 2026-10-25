@@ -46,6 +46,7 @@ for source_name, target in [
     (root / "origin-auth.private.json", "origin-auth.private.json"),
     (release / "historical-avatars.json", "historical-avatars.json"),
     (root / "cutover-state.private.json", "cutover-state.private.json"),
+    (root / "login-change.private.json", "login-change.private.json"),
     (root / "rehearsal/github-notification-verification.json", "github-notification-verification.json"),
     (release / "post-cutover-verification.json", "post-cutover-verification.json"),
     (pathlib.Path("/opt/1panel/www/sites/artalk.mcxiaochen.top/index/json/owo.json"), "owo.json"),
@@ -54,6 +55,11 @@ for source_name, target in [
 ]:
     if source_name.exists():
         shutil.copy2(source_name, backup / target)
+for record in (root / "identity-bindings").glob("*.json"):
+    shutil.copy2(record, backup / ("identity-binding-" + record.name))
+for extension in ("service", "timer"):
+    for unit in pathlib.Path("/etc/systemd/system").glob("dusklight-artalk-login-observe-*." + extension):
+        shutil.copy2(unit, backup / unit.name)
 for label in ("24h", "7d"):
     for extension in ("service", "timer"):
         unit = pathlib.Path(f"/etc/systemd/system/dusklight-artalk-observe-20261025-{label}.{extension}")
