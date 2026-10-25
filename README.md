@@ -37,7 +37,7 @@
 - **全文搜索**：Pagefind Extended 构建中文静态索引，Svelte 搜索面板支持键盘导航与 `Ctrl/Cmd + K`。
 - **文章能力**：阅读目录、文章加密、分享海报、许可信息、内容仓库变更记录、评论与站外链接中转。
 - **博客页面**：分类、标签、归档、关于、友链、追番、设备、技能与开发时间线。
-- **站点服务**：RSS、Atom、Sitemap、结构化数据、Umami 统计、Twikoo 评论和友链服务 JSON。
+- **站点服务**：RSS、Atom、Sitemap、结构化数据、Umami 统计、Artalk 评论和友链服务 JSON。
 - **轻量运行时**：Astro 默认静态预渲染，Svelte 只用于搜索和海报等必要的交互岛。
 
 ## 技术栈
@@ -88,7 +88,7 @@ pnpm preview
 | `site.ts` | 站点信息、URL、功能开关、统计与外链行为 |
 | `profile.ts` | 个人资料、头像、社交链接与 About 内容 |
 | `nav.ts` | 顶部导航与下拉菜单 |
-| `comment.ts` | Twikoo 评论配置 |
+| `comment.ts` | Artalk 评论配置 |
 | `seo.ts` | SEO 默认信息与搜索引擎验证 |
 | `resources.ts` | 可替换的运行时第三方 JS/CSS 地址 |
 | `theme.ts` | 主题默认值与主题色 |

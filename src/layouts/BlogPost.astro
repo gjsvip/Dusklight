@@ -9,7 +9,7 @@ import BaseLayout from "./BaseLayout.astro";
 import TOC from "../components/blog/TOC.astro";
 import ArticleMeta from "../components/blog/ArticleMeta.astro";
 import Tag from "../components/ui/Tag.astro";
-import TwikooComments from "../components/blog/TwikooComments.astro";
+import ArtalkComments from "../components/blog/ArtalkComments.astro";
 import JsonLd from "../components/seo/JsonLd.astro";
 import Encryptor from "../components/blog/Encryptor.astro";
 import ArticleFooter from "../components/blog/ArticleFooter.astro";
@@ -101,7 +101,7 @@ const commentsEnabled = showComment && commentConfig.enabled;
         license={license}
       />
 
-      {commentsEnabled && <TwikooComments />}
+      {commentsEnabled && <ArtalkComments />}
     </article>
 
     {/* 加密文章不渲染目录：headings 来自 render(post) 的明文结果，
@@ -479,7 +479,7 @@ const commentsEnabled = showComment && commentConfig.enabled;
     }
 
     fabComments?.addEventListener("click", () => {
-      document.getElementById("twikoo")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("comments")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
 

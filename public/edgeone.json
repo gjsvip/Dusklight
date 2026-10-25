@@ -1,0 +1,12 @@
+{
+  "redirects": [
+    { "source": "/comments", "destination": "/envelope/", "statusCode": 301 },
+    { "source": "/comments/", "destination": "/envelope/", "statusCode": 301 },
+    { "source": "/equipment", "destination": "/devices/", "statusCode": 301 },
+    { "source": "/equipment/", "destination": "/devices/", "statusCode": 301 },
+    { "source": "/log", "destination": "/timeline/", "statusCode": 301 },
+    { "source": "/log/", "destination": "/timeline/", "statusCode": 301 },
+    { "source": "/posts/p562369c9", "destination": "/envelope/", "statusCode": 301 },
+    { "source": "/posts/p562369c9/", "destination": "/envelope/", "statusCode": 301 }
+  ]
+}

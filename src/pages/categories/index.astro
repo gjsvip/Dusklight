@@ -4,6 +4,7 @@
  * 与标签索引页同构；分类来自 frontmatter 的 category 字段
  */
 import { getCollection } from "astro:content";
+import ArtalkComments from "../../components/blog/ArtalkComments.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import TaxonomyBar from "../../components/blog/TaxonomyBar.astro";
 
@@ -35,6 +36,7 @@ const categoryItems = sortedCats.map(([name, count]) => ({ name, count }));
           </a>
         ))}
       </div>
+      <ArtalkComments />
     </div>
   </section>
 </BaseLayout>
