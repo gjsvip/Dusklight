@@ -5,6 +5,7 @@ import pathlib
 import secrets
 import sqlite3
 import sys
+from email_templates import install_templates
 
 os.umask(0o077)
 root = pathlib.Path(sys.argv[1])
@@ -41,6 +42,7 @@ settings = {
                        "username": config["SMTP_USER"], "password": config["SMTP_PASS"]}},
     "admin_notify": {"email": {"enabled": True, "mail_subject": "[{{site_name}}] 您的文章「{{page_title}}」有新回复"}},
 }
+install_templates(settings, data)
 (root / "production.private.yml").write_text(json.dumps(settings, ensure_ascii=False, indent=2))
 (root / "admin.private.json").write_text(json.dumps(admin, ensure_ascii=False, indent=2))
 # 候选服务不会发送真实邮件，正式切换时才使用已准备好的生产配置。

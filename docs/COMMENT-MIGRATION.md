@@ -147,6 +147,10 @@ Artalk 使用 Python `sqlite3.Connection.backup()` 制作一致性快照，不�
 
 ## 上线观察
 
+### 邮件模板候选（2026-10-27，尚未发布）
+
+新增回复、博主通知、邮箱验证码三种原生邮件模板。部署脚本保留现有认证与 SMTP 开关，备份脚本纳入模板文件并校验文件存在。本次仅创建候选草稿 PR，没有部署或发送测试邮件，生产仍使用原配置。部署、验收门槛及回退步骤见 [邮件模板说明](./COMMENT-EMAIL-TEMPLATES.md)。
+
 即时只读检查通过：552 条历史评论（公开 533 条、待审 19 条）、无孤立回复、SQLite 完整性正常、GitHub 和通知配置启用、后端错误日志采样为 0。即时检查时尚无正式发表样本，提交成功率记录为 `null`，不虚称 100%。
 
 已设置一次性 systemd 只读任务（Asia/Shanghai）：`dusklight-artalk-observe-20261025-24h.timer` 于 **2026-10-26 23:15:45**，`dusklight-artalk-observe-20261025-7d.timer` 于 **2026-11-01 23:15:45**。任务调用 `scripts/comments/observe.py`，只读核对服务状态、数据库、API、提交状态码与错误日志采样，结果写入 root 私有 `/opt/artalk/observations/`；不发表/编辑评论、不发额外邮件、不自动重启或回退，也不自动删除数据。
