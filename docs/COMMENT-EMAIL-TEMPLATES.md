@@ -13,6 +13,7 @@ python -m unittest discover -s scripts/comments -p test_email_templates.py -v
 验证码主题不包含 code；正文按固定版本写明 5 分钟有效。
 内容使用原生模板变量，不新增 content_raw、不额外绕过原生转义。
 布局以表格与内联样式为主，嵌入样式限制评论图片、代码和长链接。无需远程字体、脚本或品牌图片。
+信任边界：`{{reply_content}}`、`{{content}}` 按原生语义原样插入邮件 HTML，净化完全依赖 Artalk 服务端对评论内容的处理；若关闭或绕过服务端净化，邮件面即成为注入面。`{{link_to_reply}}` 同理按原生变量输出。
 
 后续部署必须先保存实际活动数据目录、配置、现有模板和前端版本，并校验本机备份：
 

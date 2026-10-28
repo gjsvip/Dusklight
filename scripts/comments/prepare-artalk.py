@@ -5,6 +5,9 @@ import pathlib
 import secrets
 import sqlite3
 import sys
+
+# 显式把脚本目录加入模块搜索路径，从任意 cwd 调用都能导入同目录模块。
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from email_templates import install_templates
 
 os.umask(0o077)
