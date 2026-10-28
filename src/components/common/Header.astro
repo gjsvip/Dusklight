@@ -613,6 +613,14 @@ const navIcons: Record<string, string> = {
     .main-header {
       padding: var(--space-2) var(--space-3);
     }
+    /* 无 @container 支持时的降级：视口宽度近似容器宽度，先保证导航不溢出 */
+    .header__links {
+      display: none;
+    }
+
+    .header__menu-btn {
+      display: flex;
+    }
   }
   @container header (max-width: 768px) {
     .header__links {
