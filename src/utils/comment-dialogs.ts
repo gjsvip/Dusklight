@@ -1,3 +1,7 @@
+/**
+ * 针对 Artalk 2.10.0 的 layers manager 方法形状与 layer 命名（login / checker-*）验证。
+ * 升级 Artalk 时需回归：manager.create 猴补丁、checker-* 名称匹配、取消按钮的 data-action。
+ */
 import type { ArtalkPlugin, Layer } from "artalk";
 
 type OpenLayer = { layer: Layer; opener: HTMLElement | null };
@@ -38,12 +42,13 @@ function activateTop() {
 document.addEventListener("keydown", (event) => {
   const layer = stack.at(-1)?.layer;
   if (!layer || event.defaultPrevented) return;
-  if (event.key === "Escape" && layer.getAllowMaskClose()) {
+  // Escape 语义独立于遮罩关闭策略：优先点原生取消/关闭，仅在允许遮罩关闭时才裸 hide。
+  if (event.key === "Escape") {
     event.preventDefault();
     // 验证器的取消按钮还会结束待处理 Promise，不能只隐藏 DOM。
     const close = layer.getEl().querySelector<HTMLElement>('[data-action="cancel"], .atk-auth-dialog-title .atk-close');
     if (close) close.click();
-    else layer.hide();
+    else if (layer.getAllowMaskClose()) layer.hide();
   } else if (event.key === "Tab") {
     const el = layer.getEl();
     const items = controls(el);

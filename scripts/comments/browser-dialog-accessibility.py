@@ -10,7 +10,7 @@ base=args.base.rstrip('/')
 args.output.mkdir(parents=True,exist_ok=True)
 out=args.output;r={}
 with sync_playwright() as p:
- b=p.chromium.launch(channel='msedge',headless=True);page=b.new_page(viewport={'width':390,'height':844})
+ b=p.chromium.launch(channel='msedge',headless=True);r['browser']=b.version;page=b.new_page(viewport={'width':390,'height':844})
  page.route('**/umami.mcxiaochen.top/**',lambda r:r.abort())
  page.goto(base+'/archive/',wait_until='networkidle')
  page.locator('#mobile-menu-toggle').click();old=page.evaluate('localStorage.getItem("theme")');page.locator('.mobile-menu__theme').click();page.wait_for_timeout(600)
