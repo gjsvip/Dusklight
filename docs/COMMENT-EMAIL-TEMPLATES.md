@@ -47,3 +47,18 @@ prepare-artalk.py 在新候选初始化时安装模板；configure-auth.py 保�
 草稿 PR 保持草稿；不能以已通过的静态预览、安装测试或合成账号登录替代真实收件与授权。
 
 QA 额外隔离：SMTP 主机设为容器本机不可投递端口，真实投递配置仅存在 0600 私有文件。使用 example.invalid 合成地址验证验证码申请返回 200、同邮箱重复申请返回 400、数据库有效期为 300 秒；未实际投递邮件，不能替代收件验收。
+
+
+## 2026-10-28 生产模板部署
+
+用户追加授权后，三类模板已部署生产；本节为最新状态，前述“未修改生产”描述仅对应此前阶段。没有合并前端 PR，也没有写入测试评论。
+
+- 备份：`/opt/backups/dusklight-comments/20261028-124555-artalk-production/`；一致性 SQLite 校验通过，34 个文件的 SHA-256 与本机受限副本全部一致。
+- 本机副本：`D:\Backups\Dusklight\comment-migration\20261028-124555-artalk-production\`。备份至少保留 30 天，不自动删除。
+- 活动目录由容器挂载确认：`/opt/artalk/releases/20261025-222818-final/data`。模板为该目录下 `mail-templates/reply.html`、`admin.html`、`verify.html`。
+- 持久配置与活动 runtime 配置均更新模板路径及验证码主题；部署脚本比对确认非模板设置不变，包括 SMTP、登录方式和管理员配置。
+- 仅重启 `dusklight-artalk`；另外 19 个容器的 ID、启动时间均不变。重启后数据库 quick_check 为 ok，评论 553、用户 155、登录身份 1，计数与部署前一致。
+- 本机与公开配置接口、公开管理页返回 200，模板 SHA-256 一致。观察日志有两次旧 assets 路径 404（共 4 行），未发现模板加载错误。
+- 本轮没有实际发送或接收验收邮件；QQ/Gmail 网页端及移动端收件、链接定位仍待确认，不能将配置上线视为收件通过。PR 保持草稿。
+
+回退仅将上述备份的 `runtime.private.yml` 恢复为活动目录的 `artalk.yml`，将 `production.private.yml` 恢复到 `/opt/artalk/production.private.yml`，如备份存在旧模板则恢复旧模板；随后仅重启 Artalk 并复核接口。不得用备份数据库覆盖线上新增账号或评论。新模板文件可以保留为未引用文件，无需删除。
